@@ -1,10 +1,10 @@
 from graphic import *
-from cell import *
+from cell_and_maze import *
 
 
 def main():
     win = Window(800, 800)
-    maze = Maze(10, 10, 15, 10, 50, win)
+    maze = Maze(win, 10,10,10,10,30, 3)
     win.wait_for_close()
 
 
