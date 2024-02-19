@@ -58,7 +58,7 @@ class Square_Cell:
 
         line_color = "red"
         if undo:
-            line_color = "gray"
+            line_color = "blue"
         
         line = Line(center, to_center)
         self.__win.draw_line(line, line_color, 5)
@@ -85,9 +85,9 @@ class Maze:
         self.__width = number_of_columns * cell_size
         self.__win = win
         self.__cells = []
-        self.__stack = []
         self.__start = None
         self.__end = None
+        self.__moves = []
         if seed:
             random.seed(seed)
         
@@ -120,6 +120,7 @@ class Maze:
         
         self.entrance_and_exit()
         self.break_walls(0,0)
+        self.reset_cells_visited()
             
     def draw_cell(self, i, j):
         self.__cells[i][j].draw()
@@ -128,7 +129,7 @@ class Maze:
             
     def animate(self):
         self.__win.redraw()
-        time.sleep(0.05)
+        time.sleep(0.01)
     
     def entrance_and_exit(self):
         self.__start = self.__cells[0][0]
@@ -164,6 +165,7 @@ class Maze:
         return true_directions
     
     def break_walls(self, i, j):
+        
         current = self.__cells[i][j]
         current.visited = True
         true_directions = self.get_directions(i,j)
@@ -200,8 +202,83 @@ class Maze:
             else:
                 return
 
+    def reset_cells_visited(self):
+        for row in self.__cells:
+            for cell in row:
+                cell.visited = False
 
+    def solve(self, i, j):
+        current = self.__cells[i][j]
+        current.visited = True
+        if current == self.__end:
+            return True
         
+        rows, cols = len(self.__cells), len(self.__cells[0])
+        true_directions = self.get_directions(i,j)
+        up_cell = self.__cells[i-1][j] if i > 0 else None
+        down_cell = self.__cells[i+1][j] if i < rows - 1 else None
+        left_cell = self.__cells[i][j-1] if j > 0 else None
+        right_cell = self.__cells[i][j+1] if j < cols - 1 else None
+        
+        if "up" in true_directions and current.walls[0] == False and not up_cell.visited:
+            self.__moves.append("up")
+            current.draw_move(up_cell)
+            self.animate()
+            if self.solve(i-1, j):
+                return True
+        elif "right" in true_directions and current.walls[1] == False and not right_cell.visited:
+            self.__moves.append("right")
+            current.draw_move(right_cell)
+            self.animate()
+            if self.solve(i, j+1):
+                return True
+        elif "down" in true_directions and current.walls[2] == False and not down_cell.visited:
+            self.__moves.append("down")
+            current.draw_move(down_cell)
+            self.animate()
+            if self.solve(i+1, j):
+                return True
+        elif "left" in true_directions and current.walls[3] == False and not left_cell.visited:
+            self.__moves.append("left")
+            current.draw_move(left_cell)
+            self.animate()
+            if self.solve(i, j-1):
+                return True
+            
+
+        elif self.__moves[-1] == "up" and down_cell:
+            self.__moves.pop()
+            current.draw_move(down_cell, True)
+            self.animate()
+            self.solve(i+1, j)
+        elif self.__moves[-1] == "right" and left_cell:
+            self.__moves.pop()
+            current.draw_move(left_cell, True)
+            self.animate()
+            self.solve(i, j-1)
+        elif self.__moves[-1] == "down" and up_cell:
+            self.__moves.pop()
+            current.draw_move(up_cell, True)
+            self.animate()
+            self.solve(i-1, j)
+        elif self.__moves[-1] == "left" and right_cell:
+            self.__moves.pop()
+            current.draw_move(right_cell, True)
+            self.animate()
+            self.solve(i, j+1)
+            
+        else:
+            return False
+
+    def solve_bot(self, i, j):
+        current = self.__cells[i][j]
+        current.visited = True
+        possible_directions = self.get_directions(i, j)
+        rows, cols = len(self.__cells), len(self.__cells[0])
+        up_cell = self.__cells[i-1][j] if i > 0 else None
+        down_cell = self.__cells[i+1][j] if i < rows - 1 else None
+        left_cell = self.__cells[i][j-1] if j > 0 else None
+        right_cell = self.__cells[i][j+1] if j < cols - 1 else None
         
         
 
